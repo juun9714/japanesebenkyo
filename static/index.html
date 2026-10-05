@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자막 단어장</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e4e2dc;
+    --accent: #c2410c; --accent-soft: #fdeee4; --ruby: #9a3412; --active: #fff7ed; --hover: #f1efe9;
+    --font-ja: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    --font-ko: "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416; --panel: #1c1c1f; --ink: #ececee; --muted: #9a9aa2; --line: #2c2c31;
+      --accent: #fb923c; --accent-soft: #3a2416; --ruby: #fdba74; --active: #2a1f17; --hover: #242428;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ko); font-size: 15px; }
+  button, input, select { font: inherit; color: inherit; }
+
+  header { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1400px; margin: 0 auto; padding: 12px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+  .logo span { color: var(--accent); }
+  form { flex: 1; display: flex; gap: 8px; min-width: 260px; }
+  form input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  form input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .btn { padding: 9px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; white-space: nowrap; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 16px 20px 40px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; }
+  .left { position: sticky; top: 76px; align-self: start; display: flex; flex-direction: column; gap: 12px; }
+  .player { aspect-ratio: 16/9; width: 100%; background: #000; border-radius: 10px; overflow: hidden; }
+  .player > * { width: 100%; height: 100%; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+  .seg button { border: 0; background: none; padding: 5px 10px; cursor: pointer; color: var(--muted); }
+  .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  label.chk { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .word-empty { color: var(--muted); font-size: 13px; }
+  .word-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .word-big { font-family: var(--font-ja); font-size: 30px; font-weight: 600; }
+  .word-read { font-family: var(--font-ja); font-size: 18px; color: var(--ruby); }
+  .word-mean { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); }
+  .word-meaning { font-size: 17px; font-weight: 600; line-height: 1.4; }
+  .word-context { font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); line-height: 1.6; }
+  .word-context b { display: block; font-size: 12px; color: var(--accent); margin-bottom: 2px; }
+  .word-src { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .word-loading { font-size: 13px; color: var(--muted); }
+  .word-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin-top: 10px; font-size: 14px; }
+  .word-grid dt { color: var(--muted); }
+  .word-grid dd { margin: 0; }
+  .word-grid .ja { font-family: var(--font-ja); }
+  .word-links { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .word-links a { font-size: 13px; color: var(--accent); text-decoration: none; border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; }
+  .word-links a:hover { background: var(--accent-soft); }
+  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--hover); color: var(--muted); }
+
+  .right { min-width: 0; }
+  .meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .lines { display: flex; flex-direction: column; gap: 2px; }
+  .ln { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 10px 12px; border-radius: 8px; border-left: 3px solid transparent; cursor: pointer; }
+  .ln:hover { background: var(--hover); }
+  .ln.active { background: var(--active); border-left-color: var(--accent); }
+  .ts { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 14px; }
+  .ja { font-family: var(--font-ja); font-size: 19px; line-height: 2.1; }
+  .ko { font-size: 14px; color: var(--muted); margin-top: 2px; line-height: 1.5; transition: filter .15s; }
+  body.tr-blur .ko { filter: blur(5px); }
+  body.tr-blur .ln:hover .ko, body.tr-blur .ln.active.reveal .ko { filter: none; }
+  body.tr-hide .ko { display: none; }
+
+  .w { border-radius: 4px; padding: 0 1px; cursor: pointer; }
+  .w:hover { background: var(--accent-soft); }
+  .w.sel { background: var(--accent); color: #fff; }
+  .w.sel rt { color: #fff; }
+  .w.particle { color: var(--muted); }
+  rt { font-size: 10.5px; color: var(--ruby); font-family: var(--font-ja); letter-spacing: 0; user-select: none; }
+  body.read-ko rt, body.read-rm rt { font-family: var(--font-ko); font-size: 10px; }
+  body.read-off rt { visibility: hidden; }
+
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); line-height: 1.8; }
+  .empty b { color: var(--ink); }
+  .history { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; text-align: left; max-width: 520px; margin-inline: auto; }
+  .history button { text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 12px; cursor: pointer; font-family: var(--font-ja); }
+  .history button:hover { border-color: var(--accent); }
+  .err { color: #dc2626; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  kbd { font-family: ui-monospace, monospace; font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--panel); }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; padding-inline: 16px; }
+    .left { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-top: 8px; }
+    header { position: static; }
+    .bar { padding-inline: 16px; }
+    #wordCard { display: none; }
+    #wordCard.show { display: block; }
+  }
+</style>
+</head>
+<body class="read-hira">
+<header>
+  <div class="bar">
+    <div class="logo">자막<span>단어장</span></div>
+    <form id="form">
+      <input id="url" placeholder="유튜브 링크를 붙여넣으세요 (예: https://www.youtube.com/watch?v=...)" autocomplete="off">
+      <button class="btn primary" id="go">불러오기</button>
+    </form>
+  </div>
+</header>
+
+<main id="main" hidden>
+  <section class="left">
+    <div class="player"><div id="player"></div></div>
+    <div class="controls">
+      <span>발음</span>
+      <div class="seg" id="readSeg">
+        <button data-v="hira" class="on">히라가나</button><button data-v="ko">한글</button><button data-v="rm">로마자</button><button data-v="off">숨기기</button>
+      </div>
+      <span>번역</span>
+      <div class="seg" id="trSeg">
+        <button data-v="show" class="on">보기</button><button data-v="blur">가리기</button><button data-v="hide">끄기</button>
+      </div>
+      <span>속도</span>
+      <div class="seg" id="rateSeg">
+        <button data-v="0.5">0.5</button><button data-v="0.75">0.75</button><button data-v="1" class="on">1</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="loop"> 한 줄 반복 <kbd>R</kbd></label>
+      <label class="chk"><input type="checkbox" id="follow" checked> 자동 스크롤</label>
+    </div>
+    <div class="card" id="wordCard"><div class="word-empty">자막의 단어를 누르면 읽기·기본형·품사를 보여줘요. <kbd>←</kbd><kbd>→</kbd> 이전/다음 줄, <kbd>Space</kbd> 재생/정지</div></div>
+  </section>
+  <section class="right">
+    <div class="meta" id="meta"></div>
+    <div class="lines" id="lines"></div>
+  </section>
+</main>
+
+<div class="empty" id="empty">
+  <p><b>일본어 유튜브 영상</b>의 링크를 넣으면<br>자막의 모든 단어에 발음을 달고 한국어 번역을 붙여드려요.</p>
+  <div class="history" id="history"></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (t) => { t = Math.floor(t); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; };
+
+let data = null, player = null, ytReady = false, pendingVideo = null;
+let current = -1, selected = null;
+const pref = load("prefs", { read: "hira", tr: "show", rate: "1" });
+
+function load(k, d) { try { return { ...d, ...JSON.parse(localStorage.getItem(k) || "{}") }; } catch { return d; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+window.onYouTubeIframeAPIReady = () => { ytReady = true; if (pendingVideo) createPlayer(pendingVideo); };
+
+function createPlayer(id) {
+  if (!ytReady) { pendingVideo = id; return; }
+  if (player) { player.loadVideoById(id); return; }
+  player = new YT.Player("player", {
+    videoId: id,
+    playerVars: { rel: 0, playsinline: 1, cc_load_policy: 0 },
+    events: { onReady: () => player.setPlaybackRate(Number(pref.rate)) },
+  });
+}
+
+// ---------- 렌더링 ----------
+function rubyFor(tok) {
+  const mode = pref.read;
+  if (mode === "hira") {
+    // 한자 부분에만 히라가나 루비
+    return tok.parts.map((p) => p.r ? `<ruby>${esc(p.t)}<rt>${esc(p.r)}</rt></ruby>` : esc(p.t)).join("");
+  }
+  const r = mode === "ko" ? tok.ko : mode === "rm" ? tok.rm : tok.r;
+  return `<ruby>${esc(tok.s)}<rt>${esc(r)}</rt></ruby>`;
+}
+
+function renderLines() {
+  const html = data.lines.map((l, i) => {
+    const words = l.tokens.map((t, j) => {
+      const pre = t.pre ? esc(t.pre) : "";
+      if (t.sym) return pre + esc(t.s);
+      const cls = t.pos === "조사" || t.pos === "조동사" ? "w particle" : "w";
+      return `${pre}<span class="${cls}" data-l="${i}" data-t="${j}">${rubyFor(t)}</span>`;
+    }).join("");
+    return `<div class="ln" data-i="${i}"><div class="ts">${fmt(l.start)}</div><div><div class="ja">${words}</div><div class="ko">${esc(l.ko)}</div></div></div>`;
+  }).join("");
+  $("#lines").innerHTML = html;
+  current = -1;
+  if (selected) markSelected();
+}
+
+function renderMeta() {
+  const kind = data.kind === "manual" ? "수동 자막" : "자동 생성 자막";
+  $("#meta").innerHTML = `<span class="pill">${kind}</span><span class="pill">번역: ${esc(data.translator)}</span><span>${data.lines.length}줄</span>`;
+}
+
+function showWord(li, ti) {
+  const t = data.lines[li].tokens[ti];
+  selected = { li, ti };
+  markSelected();
+  const baseDiff = t.base && t.base !== t.s;
+  const q = encodeURIComponent(t.base || t.s);
+  $("#wordCard").classList.add("show");
+  $("#wordCard").innerHTML = `
+    <div class="word-head">
+      <span class="word-big">${esc(t.s)}</span>
+      <span class="word-read">${esc(t.r)}</span>
+      <span class="pill">${esc(t.pos)}</span>
+    </div>
+    <div class="word-mean" id="wordMean"><span class="word-loading">뜻 불러오는 중… (Claude 사용 시 몇 초 걸려요)</span></div>
+    <dl class="word-grid">
+      <dt>한글 발음</dt><dd>${esc(t.ko)}</dd>
+      <dt>로마자</dt><dd>${esc(t.rm)}</dd>
+      ${baseDiff ? `<dt>기본형</dt><dd class="ja">${esc(t.base)}${t.baseR && t.baseR !== t.base ? ` <span style="color:var(--ruby)">(${esc(t.baseR)})</span>` : ""}</dd>` : ""}
+      <dt>문장</dt><dd class="ja">${esc(data.lines[li].ja)}</dd>
+    </dl>
+    <div class="word-links">
+      <a href="https://ja.dict.naver.com/#/search?query=${q}" target="_blank" rel="noopener">네이버 일본어사전</a>
+      <a href="https://jisho.org/search/${q}" target="_blank" rel="noopener">Jisho</a>
+    </div>`;
+  loadMeaning(t, data.lines[li].ja);
+}
+
+let meaningReq = 0;
+async function loadMeaning(t, sentence) {
+  const my = ++meaningReq;  // 빠르게 다른 단어를 누르면 이전 응답은 버린다
+  const box = () => (my === meaningReq ? $("#wordMean") : null);
+  try {
+    const res = await fetch("/api/word", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base: t.base || t.s, surface: t.s, pos: t.pos, sentence }),
+    });
+    const m = await res.json();
+    if (!res.ok) throw new Error(m.detail);
+    if (!box()) return;
+    box().innerHTML = `<div class="word-meaning">${esc(m.meaning)}</div>`
+      + (m.context ? `<div class="word-context"><b>이 문장에서</b> ${esc(m.context)}</div>` : "")
+      + (!m.hasClaude ? `<div class="word-src">Claude 키를 넣으면 '이 문장에서의 뜻'도 볼 수 있어요 (README 참고)</div>` : "")
+      + `<div class="word-src">출처: ${esc(m.source)}</div>`;
+  } catch (err) {
+    if (box()) box().innerHTML = `<span class="word-loading">${esc(err.message || "뜻을 가져오지 못했어요.")} 아래 사전 링크를 이용해 주세요.</span>`;
+  }
+}
+
+function markSelected() {
+  document.querySelectorAll(".w.sel").forEach((e) => e.classList.remove("sel"));
+  if (!selected) return;
+  const el = document.querySelector(`.w[data-l="${selected.li}"][data-t="${selected.ti}"]`);
+  if (el) el.classList.add("sel");
+}
+
+// ---------- 재생 동기화 ----------
+function lineAt(t) {
+  const L = data.lines;
+  let lo = 0, hi = L.length - 1, ans = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (L[m].start <= t + 0.05) { ans = m; lo = m + 1; } else hi = m - 1; }
+  return ans;
+}
+
+function setActive(i) {
+  if (i === current) return;
+  const prev = document.querySelector(".ln.active");
+  if (prev) prev.classList.remove("active");
+  current = i;
+  if (i < 0) return;
+  const el = document.querySelector(`.ln[data-i="${i}"]`);
+  if (!el) return;
+  el.classList.add("active");
+  if ($("#follow").checked) el.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+function seekLine(i) {
+  if (!player || !data || i < 0 || i >= data.lines.length) return;
+  player.seekTo(data.lines[i].start, true);
+  player.playVideo();
+  setActive(i);
+}
+
+setInterval(() => {
+  if (!player || !data || typeof player.getCurrentTime !== "function") return;
+  const t = player.getCurrentTime();
+  if ($("#loop").checked && current >= 0) {
+    const l = data.lines[current];
+    const next = data.lines[current + 1];
+    const end = next ? Math.min(next.start, l.start + l.dur) : l.start + l.dur;
+    if (t >= end - 0.05 || t < l.start - 0.5) { player.seekTo(l.start, true); return; }
+    return;
+  }
+  setActive(lineAt(t));
+}, 150);
+
+// ---------- 이벤트 ----------
+$("#lines").addEventListener("click", (e) => {
+  const w = e.target.closest(".w");
+  if (w) { showWord(+w.dataset.l, +w.dataset.t); return; }
+  const ln = e.target.closest(".ln");
+  if (ln) seekLine(+ln.dataset.i);
+});
+
+function bindSeg(id, key, apply) {
+  const seg = $(id);
+  const set = (v) => {
+    seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+    pref[key] = v; save("prefs", pref); apply(v);
+  };
+  seg.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) set(b.dataset.v); });
+  set(pref[key]);
+}
+bindSeg("#readSeg", "read", (v) => {
+  document.body.classList.remove("read-hira", "read-ko", "read-rm", "read-off");
+  document.body.classList.add("read-" + v);
+  if (data) { renderLines(); setActive(player ? lineAt(player.getCurrentTime?.() || 0) : -1); }
+});
+bindSeg("#trSeg", "tr", (v) => {
+  document.body.classList.remove("tr-show", "tr-blur", "tr-hide");
+  document.body.classList.add("tr-" + v);
+});
+bindSeg("#rateSeg", "rate", (v) => { if (player?.setPlaybackRate) player.setPlaybackRate(Number(v)); });
+
+document.addEventListener("keydown", (e) => {
+  if (!data || e.target.matches("input")) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); seekLine(current + 1); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); seekLine(Math.max(0, current - 1)); }
+  else if (e.key === " ") {
+    e.preventDefault();
+    if (player) player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo();
+  }
+  else if (e.key.toLowerCase() === "r") { $("#loop").checked = !$("#loop").checked; }
+});
+
+$("#form").addEventListener("submit", (e) => { e.preventDefault(); const u = $("#url").value.trim(); if (u) loadVideo(u); });
+
+async function loadVideo(url) {
+  $("#go").disabled = true;
+  $("#main").hidden = true;
+  $("#empty").hidden = false;
+  $("#empty").innerHTML = `<div class="spinner"></div>자막을 가져와서 분석하고 번역하는 중이에요…<br><small>긴 영상은 1~2분 걸릴 수 있어요.</small>`;
+  try {
+    const res = await fetch("/api/process", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.detail || "처리 중 오류가 발생했어요.");
+    data = body;
+    selected = null;
+    $("#wordCard").classList.remove("show");
+    renderMeta();
+    renderLines();
+    $("#empty").hidden = true;
+    $("#main").hidden = false;
+    createPlayer(data.videoId);
+    history.replaceState(null, "", "?v=" + data.videoId);
+  } catch (err) {
+    $("#empty").innerHTML = `<p class="err">${esc(err.message)}</p>`;
+    loadHistory();
+  } finally {
+    $("#go").disabled = false;
+  }
+}
+
+async function loadHistory() {
+  try {
+    const items = await (await fetch("/api/history")).json();
+    if (!items.length) return;
+    const box = document.createElement("div");
+    box.className = "history";
+    box.innerHTML = `<div style="font-size:13px">최근에 본 영상</div>` + items.map((it) =>
+      `<button data-v="${esc(it.videoId)}">${esc(it.preview)}… <span class="pill">${it.count}줄</span></button>`).join("");
+    box.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { $("#url").value = "https://youtu.be/" + b.dataset.v; loadVideo(b.dataset.v); } });
+    $("#history")?.remove();
+    box.id = "history";
+    $("#empty").appendChild(box);
+  } catch {}
+}
+
+const initial = new URLSearchParams(location.search).get("v");
+if (initial) { $("#url").value = "https://youtu.be/" + initial; loadVideo(initial); } else loadHistory();
+</script>
+</body>
+</html>
